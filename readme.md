@@ -96,4 +96,16 @@ Las pruebas de los endpoints están disponibles en el archivo .rest incluido en 
 
 ---
 
-Este documento se irá ampliando y actualizando constantemente.
+### Avisos
+
+#### Obtener todos los avisos
+**GET** `/api/avisos`
+
+- **Descripción:** Obtiene todos los avisos almacenados en la base de datos.
+
+#### Realizar scraping y guardar avisos
+**GET** `/api/avisos/scrape`
+
+- **Descripción:** Realiza el scraping de avisos desde una fuente externa, almacena los avisos nuevos en la base de datos y detecta duplicados para evitar almacenarlos nuevamente.
+
+*Este documento se irá ampliando y actualizando constantemente.

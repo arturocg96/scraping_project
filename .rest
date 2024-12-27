@@ -32,3 +32,8 @@ Content-Type: application/json
 ###
 
 
+### Obtener todos los avisos
+GET http://localhost:3000/api/avisos
+
+### Realizar scraping de avisos
+GET http://localhost:3000/api/avisos/scrape
