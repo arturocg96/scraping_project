@@ -108,4 +108,23 @@ Las pruebas de los endpoints están disponibles en el archivo .rest incluido en 
 
 - **Descripción:** Realiza el scraping de avisos desde una fuente externa, almacena los avisos nuevos en la base de datos y detecta duplicados para evitar almacenarlos nuevamente.
 
+---
+
+### Noticias
+
+#### Obtener todas las noticias
+**GET** `/api/noticias`
+
+- **Descripción:** Obtiene todas las noticias almacenadas en la base de datos.
+
+---
+
+#### Realizar scraping y guardar noticias
+**GET** `/api/noticias/scrape`
+
+- **Descripción:** Realiza el scraping de noticias desde una fuente externa, almacena las noticias nuevas en la base de datos y detecta duplicados para evitar almacenarlas nuevamente.
+
+---
+
+
 *Este documento se irá ampliando y actualizando constantemente.

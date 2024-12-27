@@ -2,9 +2,10 @@ const scrapeService = require('../services/scrapeService'); // Servicio para rea
 const eventsModel = require('../models/eventsModel'); // Modelo para la interacción con la base de datos de eventos generales.
 const agendaModel = require('../models/agendaModel'); // Modelo para la interacción con la base de datos de eventos de agenda.
 const avisosModel = require('../models/avisosModel'); // Modelo para la interacción con la base de datos de avisos.
+const newsModel = require('../models/noticiasModel'); // Modelo para la interacción con la base de datos de noticias.
 
 /**
- * Controlador para realizar el scraping de eventos generales, eventos de agenda y avisos,
+ * Controlador para realizar el scraping de eventos generales, eventos de agenda, avisos y noticias,
  * y almacenar los datos obtenidos en sus respectivas bases de datos.
  * 
  * @param {Request} req - Objeto de solicitud HTTP.
@@ -24,12 +25,17 @@ const scrapeAllAndSave = async (req, res) => {
         const avisos = await scrapeService.scrapeAvisos();
         const avisosResults = await avisosModel.saveAvisos(avisos);
 
+        // Realiza el scraping de noticias y guarda los resultados.
+        const news = await scrapeService.scrapeNews();
+        const newsResults = await newsModel.saveNews(news);
+
         // Responde con un resumen de los resultados del scraping y almacenamiento.
         res.json({
             message: 'Scraping completo realizado',
             events: eventResults, // Resultados del procesamiento de eventos generales.
             agenda: agendaResults, // Resultados del procesamiento de eventos de agenda.
             avisos: avisosResults, // Resultados del procesamiento de avisos.
+            news: newsResults, // Resultados del procesamiento de noticias.
         });
     } catch (error) {
         // Maneja errores generales durante el proceso de scraping o almacenamiento.

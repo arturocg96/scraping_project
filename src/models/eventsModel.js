@@ -44,7 +44,7 @@ const saveEvents = async (events) => {
             } else {
                 // Manejo de errores no relacionados con duplicados.
                 console.error(
-                    'Error al guardar evento:',
+                    'Error al guardar evento social:',
                     { event_date, event_time, title },
                     error.message
                 );
@@ -55,7 +55,7 @@ const saveEvents = async (events) => {
 
     // Mensaje de resumen si hubo eventos duplicados.
     if (duplicateCount > 0) {
-        console.warn(`Eventos duplicados controlados y no almacenados: ${duplicateCount}`);
+        console.warn(`Eventos sociales controlados y no almacenados: ${duplicateCount}`);
     }
 
     // Cierra la conexión con la base de datos.
@@ -78,7 +78,7 @@ const getAllEvents = async () => {
         return rows; // Devuelve los registros obtenidos.
     } catch (error) {
         // Manejo de errores durante la recuperación de datos.
-        console.error('Error al obtener eventos:', error.message);
+        console.error('Error al obtener eventos sociales:', error.message);
         throw error;
     } finally {
         // Asegura que la conexión se cierre, incluso si ocurre un error.

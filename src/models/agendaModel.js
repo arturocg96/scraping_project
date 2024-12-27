@@ -38,7 +38,7 @@ const saveAgendaEvents = async (events) => {
             results.push({
                 status: 'skipped',
                 event,
-                message: 'Evento incompleto, no insertado'
+                message: 'Evento ayuntamiento incompleto, no insertado'
             });
             continue; // Salta al siguiente evento en la lista.
         }
@@ -55,7 +55,7 @@ const saveAgendaEvents = async (events) => {
             } else {
                 // Manejo de errores no relacionados con duplicados.
                 console.error(
-                    'Error al guardar evento en la agenda:',
+                    'Error al guardar evento del ayuntamiento en la agenda:',
                     { event_date, event_time, title },
                     error.message
                 );
@@ -66,10 +66,10 @@ const saveAgendaEvents = async (events) => {
 
     // Mensajes de resumen después de procesar todos los eventos.
     if (duplicateCount > 0) {
-        console.warn(`Eventos duplicados controlados y no almacenados: ${duplicateCount}`);
+        console.warn(`Eventos ayuntamiento duplicados controlados y no almacenados: ${duplicateCount}`);
     }
     if (skippedCount > 0) {
-        console.warn(`Eventos incompletos que no se almacenaron: ${skippedCount}`);
+        console.warn(`Eventos ayuntamiento incompletos que no se almacenaron: ${skippedCount}`);
     }
 
     // Cierra la conexión con la base de datos.
@@ -92,7 +92,7 @@ const getAllAgendaEvents = async () => {
         return rows; // Devuelve los registros obtenidos.
     } catch (error) {
         // Manejo de errores durante la recuperación de datos.
-        console.error('Error al obtener eventos de la agenda:', error.message);
+        console.error('Error al obtener eventos del ayuntamiento de la agenda:', error.message);
         throw error;
     } finally {
         // Asegura que la conexión se cierre incluso si ocurre un error.

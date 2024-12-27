@@ -44,3 +44,18 @@ CREATE TABLE `avisos` (
 ) ENGINE=InnoDB 
   DEFAULT CHARSET=utf8mb4 
   COLLATE=utf8mb4_0900_ai_ci;
+
+-- ====================================
+-- Tabla: Noticias
+-- ====================================
+CREATE TABLE `news` (
+  `id` INT NOT NULL AUTO_INCREMENT,            -- Identificador único
+  `title` VARCHAR(255) NOT NULL,               -- Título de la noticia
+  `raw_date` VARCHAR(255) NOT NULL,            -- Fecha original de la noticia
+  `content` TEXT DEFAULT NULL,                 -- Contenido de la noticia (opcional)
+  `link` VARCHAR(2083) NOT NULL,               -- Enlace a la noticia
+  PRIMARY KEY (`id`),                          -- Llave primaria
+  UNIQUE KEY `key_news` (`title`, `raw_date`)  -- Restricción de unicidad
+) ENGINE=InnoDB 
+  DEFAULT CHARSET=utf8mb4 
+  COLLATE=utf8mb4_0900_ai_ci;
