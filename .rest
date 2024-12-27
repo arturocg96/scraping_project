@@ -1,0 +1,34 @@
+
+########General########
+# Scraping general y guardar
+GET http://localhost:3000/api/scrape/
+Content-Type: application/json
+
+########Eventos########
+
+# Obtener todos los eventos
+GET http://localhost:3000/api/eventos/
+Content-Type: application/json
+
+###
+
+# Scraping y guardar eventos
+GET http://localhost:3000/api/eventos/scrape
+Content-Type: application/json
+
+###
+
+########Agenda########
+# Obtener todos los eventos de la agenda
+GET http://localhost:3000/api/agenda/
+Content-Type: application/json
+
+###
+
+# Scraping y guardar agenda
+GET http://localhost:3000/api/agenda/scrape
+Content-Type: application/json
+
+###
+
+

@@ -1,12 +1,20 @@
-const express = require('express');
-const eventsRoutes = require('./apiRoutes/eventsRoutes');
-const agendaRoutes = require('./apiRoutes/agendaRoutes');
-const scrapeRoutes = require('./apiRoutes/scrapeRoutes');
+const express = require('express'); // Importa Express para manejar rutas y middleware.
+const eventsRoutes = require('./apiRoutes/eventsRoutes'); // Importa las rutas relacionadas con los eventos generales.
+const agendaRoutes = require('./apiRoutes/agendaRoutes'); // Importa las rutas relacionadas con la agenda.
+const scrapeRoutes = require('./apiRoutes/scrapeRoutes'); // Importa las rutas relacionadas con el scraping.
 
-const router = express.Router();
+const router = express.Router(); // Crea un nuevo enrutador principal.
 
-router.use('/eventos', eventsRoutes);
-router.use('/agenda', agendaRoutes);
-router.use('/scrape', scrapeRoutes);
+/**
+ * Define los subrutas para cada recurso o funcionalidad de la aplicación.
+ *
+ * - `/eventos`: Gestiona rutas relacionadas con eventos generales.
+ * - `/agenda`: Gestiona rutas relacionadas con la agenda de eventos.
+ * - `/scrape`: Gestiona rutas para ejecutar procesos de scraping de datos.
+ */
+router.use('/eventos', eventsRoutes); // Monta las rutas de eventos bajo el prefijo `/eventos`.
+router.use('/agenda', agendaRoutes); // Monta las rutas de agenda bajo el prefijo `/agenda`.
+router.use('/scrape', scrapeRoutes); // Monta las rutas de scraping bajo el prefijo `/scrape`.
 
+// Exporta el enrutador principal para que sea utilizado en la configuración del servidor.
 module.exports = router;
