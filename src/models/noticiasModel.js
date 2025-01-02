@@ -5,7 +5,7 @@ const db = require("../db/connection");
  * Detecta noticias duplicadas y las maneja correctamente durante el proceso de inserción.
  * 
  * @param {Array} news - Lista de noticias a guardar.
- * @returns {Promise<Array>} Resultados del proceso de inserción.
+ * @returns {Promise<Object>} Resultados del proceso de inserción y un resumen.
  */
 const saveNews = async (news) => {
   const connection = await db.connect();
@@ -17,8 +17,6 @@ const saveNews = async (news) => {
   `;
 
   const results = []; // Array para almacenar los resultados de cada operación.
-  let duplicateCount = 0; // Contador de noticias duplicadas.
-  let skippedCount = 0; // Contador de noticias incompletas.
 
   // Itera sobre cada noticia en la lista proporcionada.
   for (const article of news) {
@@ -26,7 +24,6 @@ const saveNews = async (news) => {
 
     // Valida que los campos obligatorios estén presentes.
     if (!title || !rawDate || !link) {
-      skippedCount++; // Incrementa el contador de noticias incompletas.
       results.push({ status: "skipped", article, message: "Datos incompletos" });
       continue; // Salta al siguiente artículo.
     }
@@ -37,28 +34,37 @@ const saveNews = async (news) => {
       results.push({ status: "success", article }); // Inserción exitosa.
     } catch (error) {
       if (error.code === "ER_DUP_ENTRY") {
-        duplicateCount++; // Incrementa el contador de duplicados.
         results.push({ status: "duplicate", article }); // Registra el artículo como duplicado.
       } else {
         // Manejo de errores no relacionados con duplicados.
-        console.error("Error al guardar noticia:", { title, rawDate, link }, error.message);
         results.push({ status: "error", article, message: error.message });
       }
     }
   }
 
-  // Mensajes de resumen si hubo noticias duplicadas o incompletas.
-  if (duplicateCount > 0) {
-    console.warn(`Noticias duplicadas controladas y no almacenadas: ${duplicateCount}`);
-  }
-  if (skippedCount > 0) {
-    console.warn(`Noticias incompletas que no se almacenaron: ${skippedCount}`);
-  }
+  // Filtra los resultados para crear un resumen.
+  const saved = results.filter((result) => result.status === "success");
+  const duplicates = results.filter((result) => result.status === "duplicate");
+  const errors = results.filter((result) => result.status === "error");
+
+  console.info("\n==== RESUMEN DEL SCRAPING DE NOTICIAS - WEB AYTO ====");
+  console.info("Scraping de noticias completado con éxito.\n");
+  console.info("Resultados:");
+  console.info(`- Total de noticias procesadas: ${news.length}`);
+  console.info(`- Nuevas noticias almacenadas: ${saved.length}`);
+  console.info(`- Noticias duplicadas: ${duplicates.length}`);
+  console.info(`- Errores durante el proceso: ${errors.length}`);
+  console.info(
+    errors.length > 0
+      ? "Errores detectados durante el proceso."
+      : "No se detectaron errores durante el proceso."
+  );
+  console.info("============================\n");
 
   // Cierra la conexión con la base de datos.
   await connection.end();
 
-  return results; // Devuelve los resultados del proceso de inserción.
+  return { results, summary: { saved, duplicates, errors } }; // Devuelve los resultados y el resumen.
 };
 
 /**
@@ -75,7 +81,6 @@ const getAllNews = async () => {
     return rows; // Devuelve los registros obtenidos.
   } catch (error) {
     // Manejo de errores durante la recuperación de datos.
-    console.error("Error al obtener noticias:", error.message);
     throw error;
   } finally {
     // Asegura que la conexión se cierre, incluso si ocurre un error.

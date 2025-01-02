@@ -7,10 +7,6 @@ const PORT = process.env.PORT || 3000;
 // Crear el servidor HTTP usando la aplicación Express
 const server = http.createServer(app);
 
-// Configura el tiempo de espera del servidor (timeout) en milisegundos
-// Esto establece cuánto tiempo el servidor esperará antes de cerrar una conexión inactiva.
-server.setTimeout(300000); // 5 minutos
-
 // Inicia el servidor y comienza a escuchar en el puerto especificado
 server.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`); // Mensaje de confirmación al iniciar el servidor

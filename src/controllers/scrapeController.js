@@ -21,8 +21,17 @@ const scrapeAllAndSave = async (req, res) => {
         const agendaEvents = await scrapeService.scrapeAgenda();
         const agendaResults = await agendaModel.saveAgendaEvents(agendaEvents);
 
-        // Realiza el scraping de avisos y guarda los resultados.
+        // Realiza el scraping de avisos y procesa el contenido de cada aviso.
         const avisos = await scrapeService.scrapeAvisos();
+        for (const aviso of avisos) {
+            if (aviso.link) {
+                // Extrae el contenido del aviso desde el enlace.
+                const { content } = await scrapeService.scrapeAvisoContent(aviso.link);
+                aviso.content = content; // Asigna el contenido extraído al aviso.
+            } else {
+                aviso.content = null; // Si no hay enlace, no hay contenido.
+            }
+        }
         const avisosResults = await avisosModel.saveAvisos(avisos);
 
         // Realiza el scraping de noticias y guarda los resultados.
@@ -34,7 +43,7 @@ const scrapeAllAndSave = async (req, res) => {
             message: 'Scraping completo realizado',
             events: eventResults, // Resultados del procesamiento de eventos generales.
             agenda: agendaResults, // Resultados del procesamiento de eventos de agenda.
-            avisos: avisosResults, // Resultados del procesamiento de avisos.
+            avisos: avisosResults, // Resultados del procesamiento de avisos con contenido.
             news: newsResults, // Resultados del procesamiento de noticias.
         });
     } catch (error) {

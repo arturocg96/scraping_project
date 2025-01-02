@@ -2,7 +2,7 @@ const avisosModel = require('../models/avisosModel'); // Modelo para la interacc
 const scrapeService = require('../services/scrapeService'); // Servicio encargado de realizar el scraping de avisos.
 
 /**
- * Controlador para realizar el scraping de avisos, guardarlos en la base de datos
+ * Controlador para realizar el scraping de avisos, guardar su contenido en la base de datos
  * y devolver un resumen de los resultados.
  *
  * @param {Request} req - Objeto de solicitud HTTP.
@@ -10,31 +10,44 @@ const scrapeService = require('../services/scrapeService'); // Servicio encargad
  */
 const scrapeAvisosAndSave = async (req, res) => {
     try {
-        // Realiza el scraping de avisos desde una fuente externa.
+        // Realiza el scraping de los avisos.
         const avisos = await scrapeService.scrapeAvisos();
 
-        // Guarda los avisos en la base de datos a través del modelo y recibe los resultados del proceso.
-        const results = await avisosModel.saveAvisos(avisos);
+        for (const aviso of avisos) {
+            if (aviso.link) {
+                // Obtiene el contenido del aviso usando su enlace.
+                const { content } = await scrapeService.scrapeAvisoContent(aviso.link);
+                aviso.content = content;
 
-        // Clasifica los resultados según su estado: éxito, duplicados y errores.
-        const saved = results.filter(result => result.status === 'success'); // Avisos guardados correctamente.
-        const duplicates = results.filter(result => result.status === 'duplicate'); // Avisos duplicados no guardados.
-        const errors = results.filter(result => result.status === 'error'); // Avisos con errores en el guardado.
+                // Determina la categoría del aviso en base al título o subtítulo.
+                if (aviso.title.toLowerCase().includes('tráfico') || aviso.title.toLowerCase().includes('circulación')) {
+                    aviso.category = 'Tráfico';
+                } else if (aviso.title.toLowerCase().includes('agua')) {
+                    aviso.category = 'Suministros';
+                } else if (aviso.title.toLowerCase().includes('infraestructura')) {
+                    aviso.category = 'Infraestructuras';
+                } else {
+                    aviso.category = 'Sin categoría';
+                }
+            } else {
+                aviso.content = null; // Si no hay enlace, el contenido será nulo.
+                aviso.category = 'Sin categoría'; // Si no hay enlace, asigna una categoría por defecto.
+            }
+        }
 
-        // Responde con un resumen detallado de los resultados.
+        // Guarda los avisos en la base de datos y obtiene el resumen.
+        const { results, summary } = await avisosModel.saveAvisos(avisos);
+
+        // Responde con un resumen del proceso.
         res.json({
             message: 'Scraping y almacenamiento de avisos completados',
-            saved: saved.map(result => result.aviso), // Avisos exitosamente almacenados.
-            duplicates: duplicates.map(result => result.aviso), // Avisos duplicados detectados.
-            errors: errors.map(result => ({
-                aviso: result.aviso,
-                message: result.message, // Mensaje de error específico.
-            })),
+            total_processed: avisos.length,
+            saved: summary.saved.length,
+            duplicates: summary.duplicates.length,
+            errors: summary.errors,
         });
     } catch (error) {
-        // Maneja errores generales durante el scraping o el almacenamiento.
-        console.error('Error en scrapeAvisosAndSave:', error.message);
-        res.status(500).json({ error: 'Error al realizar scraping o guardar los avisos' }); // Respuesta con error al cliente.
+        res.status(500).json({ error: 'Error al realizar scraping o guardar los avisos' });
     }
 };
 
@@ -46,15 +59,12 @@ const scrapeAvisosAndSave = async (req, res) => {
  */
 const getAllAvisos = async (req, res) => {
     try {
-        // Recupera todos los avisos desde el modelo.
         const avisos = await avisosModel.getAllAvisos();
-        res.json(avisos); // Responde con los avisos obtenidos.
+        res.json(avisos);
     } catch (error) {
-        // Maneja errores durante la obtención de avisos.
-        console.error('Error en getAllAvisos:', error.message);
-        res.status(500).json({ error: 'Error al obtener los avisos' }); // Envía una respuesta con error al cliente.
+        res.status(500).json({ error: 'Error al obtener los avisos' });
     }
 };
 
-// Exporta los controladores para su uso en las rutas o en otras partes de la aplicación.
+// Exporta los controladores para su uso en otros módulos.
 module.exports = { scrapeAvisosAndSave, getAllAvisos };

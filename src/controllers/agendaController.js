@@ -10,31 +10,28 @@ const scrapeService = require('../services/scrapeService'); // Servicio para rea
  */
 const scrapeAgendaAndSave = async (req, res) => {
     try {
-        // Realiza el scraping para obtener los eventos de la agenda.
+        // Realiza el scraping de eventos de la agenda.
         const agendaEvents = await scrapeService.scrapeAgenda();
 
-        // Guarda los eventos obtenidos en la base de datos y recibe los resultados del proceso.
+        // Guarda los eventos en la base de datos.
         const results = await agendaModel.saveAgendaEvents(agendaEvents);
 
-        // Clasifica los resultados según su estado: éxito, duplicados y errores.
-        const saved = results.filter(result => result.status === 'success');     // Eventos guardados correctamente.
-        const duplicates = results.filter(result => result.status === 'duplicate'); // Eventos duplicados no guardados.
-        const errors = results.filter(result => result.status === 'error');         // Eventos con errores en el guardado.
+        // Clasifica los resultados.
+        const saved = results.filter(result => result.status === 'success');
+        const duplicates = results.filter(result => result.status === 'duplicate');
+        const errors = results.filter(result => result.status === 'error');
 
-        // Responde con un resumen detallado de los resultados del proceso.
         res.json({
-            message: 'Scraping y almacenamiento de la agenda completados',
-            saved: saved.map(result => result.event), // Eventos exitosamente almacenados.
-            duplicates: duplicates.map(result => result.event), // Eventos duplicados detectados.
+            message: 'Scraping de eventos de la agenda completado',
+            saved: saved.map(result => result.event),
+            duplicates: duplicates.map(result => result.event),
             errors: errors.map(result => ({
-                event: result.event, 
-                message: result.message, // Mensaje de error específico para cada evento.
+                event: result.event,
+                message: result.message,
             })),
         });
     } catch (error) {
-        // Maneja errores generales durante el scraping o el almacenamiento de los eventos.
-        console.error('Error en scrapeAgendaAndSave:', error.message);
-        res.status(500).json({ error: 'Error al realizar scraping o guardar los datos de la agenda' });
+        res.status(500).json({ error: 'Error al realizar scraping o guardar eventos de la agenda' });
     }
 };
 
@@ -48,10 +45,10 @@ const getAllAgendaEvents = async (req, res) => {
     try {
         // Recupera todos los eventos almacenados en la base de datos.
         const events = await agendaModel.getAllAgendaEvents();
+
         res.json(events); // Responde con los eventos obtenidos.
     } catch (error) {
         // Maneja errores durante la obtención de los eventos.
-        console.error('Error en getAllAgendaEvents:', error.message);
         res.status(500).json({ error: 'Error al obtener los eventos de la agenda' });
     }
 };

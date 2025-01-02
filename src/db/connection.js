@@ -20,7 +20,7 @@ module.exports.connect = async () => {
     try {
         // Establece la conexión con la base de datos.
         const connection = await mysql.createConnection(dbConfig);
-        console.log('Conexión exitosa a la base de datos');
+       
         return connection; // Devuelve la conexión establecida.
     } catch (error) {
         // Maneja y registra cualquier error ocurrido durante el intento de conexión.

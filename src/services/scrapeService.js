@@ -2,7 +2,6 @@ const axios = require("axios"); // Importa Axios para realizar solicitudes HTTP.
 const cheerio = require("cheerio"); // Importa Cheerio para manipular y extraer datos del HTML.
 const { formatEventDate } = require("../utils/dateUtils"); // Importa una utilidad para formatear fechas.
 
-// Constante para almacenar la base común de las URLs del Ayuntamiento de León.
 const BASE_URL = "https://www.aytoleon.es/es/actualidad";
 
 /**
@@ -13,8 +12,8 @@ const BASE_URL = "https://www.aytoleon.es/es/actualidad";
  */
 const scrapePage = async (url, processFn) => {
   try {
-    console.log(`Iniciando scraping de: ${url}`);
-    const { data } = await axios.get(url); // Solicitud HTTP GET para obtener el HTML de la página.
+    console.info(`Scraping contenido de: ${url}`);
+    const { data } = await axios.get(url); // Realiza la solicitud HTTP GET para obtener el HTML de la página.
     const $ = cheerio.load(data); // Carga el HTML en Cheerio.
     return processFn($); // Llama a la función personalizada para procesar los datos.
   } catch (error) {
@@ -39,21 +38,20 @@ const processEvents = ($) => {
     let location = null;
 
     if (subtitle) {
-      const timeMatch = subtitle.match(/^(\d{1,2}:\d{2})/);
+      const timeMatch = subtitle.match(/^\d{1,2}:\d{2}/);
       if (timeMatch) {
-        event_time = timeMatch[1];
+        event_time = timeMatch[0];
         location = subtitle.replace(timeMatch[0], "").trim();
       } else {
         location = subtitle.trim();
       }
-
-      location = location.replace(/^\s*horas\s*/i, "").replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+      location = location.replace(/\s*horas\s*/i, "").replace(/\n/g, " ").replace(/\s+/g, " ").trim();
     }
 
     events.push({ rawDate, title, location, event_time });
   });
 
-  return events.map(event => ({
+  return events.map((event) => ({
     event_date: formatEventDate(event.rawDate),
     title: event.title,
     location: event.location,
@@ -68,16 +66,39 @@ const processEvents = ($) => {
  */
 const processAvisos = ($) => {
   const avisos = [];
-  $(".row.listitem-row").each((_, element) => {
-    const title = $(element).find(".listitem-title").text().trim() || null;
-    const subtitle = $(element).find(".listitem-subtitle").text().trim() || null;
+  $(".panel-content").each((_, element) => {
+    $(element)
+      .find(".row.listitem-row")
+      .each((__, avisoElement) => {
+        const title = $(avisoElement).find(".listitem-title").text().trim() || null;
+        const subtitle = $(avisoElement).find(".listitem-subtitle").text().trim() || null;
+        const relativeLink = $(avisoElement).closest("a").attr("href") || null;
+        const link = relativeLink ? new URL(relativeLink, BASE_URL).href : null;
 
-    const relativeLink = $(element).closest("a").attr("href") || null;
-    const link = relativeLink ? new URL(relativeLink, BASE_URL).href : null;
-
-    avisos.push({ title, subtitle, link });
+        avisos.push({ title, subtitle, link });
+      });
   });
   return avisos;
+};
+
+/**
+ * Extrae el contenido de un aviso dado su URL.
+ * @param {string} url - URL del aviso.
+ * @returns {Promise<{content: string|null}>} Contenido extraído del aviso.
+ */
+const scrapeAvisoContent = async (url) => {
+  try {
+    console.info(`Scraping contenido de: ${url}`);
+    const { data } = await axios.get(url); // Realiza la solicitud HTTP GET.
+    const $ = cheerio.load(data); // Carga el HTML en Cheerio.
+
+    // Extrae el contenido del aviso desde el div con clase ExternalClass
+    const content = $('div[class^="ExternalClass"]').text().trim() || null;    
+    return { content };
+  } catch (error) {
+    console.error(`Error al extraer contenido del aviso en ${url}: ${error.message}`);
+    return { content: null };
+  }
 };
 
 /**
@@ -91,7 +112,6 @@ const processNews = ($) => {
     const title = $(element).find(".listitem-title").text().trim() || null;
     const rawDate = $(element).find(".listitem-subtitle").first().text().trim() || null;
     const content = $(element).find(".listitem-subtitle").last().text().trim() || null;
-
     const relativeLink = $(element).find("a").attr("href") || null;
     const link = relativeLink ? new URL(relativeLink, BASE_URL).href : null;
 
@@ -129,4 +149,4 @@ const scrapeNews = () =>
   scrapePage(`${BASE_URL}/noticias/Paginas/default.aspx`, processNews);
 
 // Exporta las funciones para su uso en otros módulos.
-module.exports = { scrapeEvents, scrapeAgenda, scrapeAvisos, scrapeNews };
+module.exports = { scrapeEvents, scrapeAgenda, scrapeAvisos, scrapeAvisoContent, scrapeNews };

@@ -11,10 +11,7 @@ const db = require('../db/connection');
  *   - title: Título del evento (requerido).
  *   - location: Ubicación del evento (requerido).
  * 
- * @returns {Promise<Array>} - Array de resultados, donde cada resultado incluye:
- *   - status: Estado de la operación ('success', 'duplicate', 'error').
- *   - event: El evento procesado.
- *   - message: Detalles adicionales en caso de error.
+ * @returns {Promise<Object>} - Resultados del proceso de inserción y resumen del proceso.
  */
 const saveEvents = async (events) => {
     const connection = await db.connect();
@@ -26,9 +23,7 @@ const saveEvents = async (events) => {
     `;
 
     const results = []; // Array para almacenar los resultados de cada operación.
-    let duplicateCount = 0; // Contador de eventos duplicados.
 
-    // Itera sobre cada evento en la lista proporcionada.
     for (const event of events) {
         const { event_date, event_time, title, location } = event;
 
@@ -39,29 +34,32 @@ const saveEvents = async (events) => {
         } catch (error) {
             // Manejo de errores relacionados con eventos duplicados.
             if (error.code === 'ER_DUP_ENTRY') {
-                duplicateCount++; // Incrementa el contador de duplicados.
                 results.push({ status: 'duplicate', event });
             } else {
                 // Manejo de errores no relacionados con duplicados.
-                console.error(
-                    'Error al guardar evento social:',
-                    { event_date, event_time, title },
-                    error.message
-                );
                 results.push({ status: 'error', event, message: error.message });
             }
         }
     }
 
-    // Mensaje de resumen si hubo eventos duplicados.
-    if (duplicateCount > 0) {
-        console.warn(`Eventos sociales controlados y no almacenados: ${duplicateCount}`);
-    }
+    // Filtra los resultados para generar un resumen.
+    const saved = results.filter(result => result.status === 'success');
+    const duplicates = results.filter(result => result.status === 'duplicate');
+    const errors = results.filter(result => result.status === 'error');
 
-    // Cierra la conexión con la base de datos.
+    console.info('\n==== RESUMEN SCRAPING EVENTOS - WEB AYTO ====');
+    console.info('Scraping de eventos generales completado con éxito.\n');
+    console.info(`Resultados:`);
+    console.info(`- Total de eventos procesados: ${events.length}`);
+    console.info(`- Nuevos eventos almacenados: ${saved.length}`);
+    console.info(`- Eventos duplicados: ${duplicates.length}`);
+    console.info(`- Errores durante el proceso: ${errors.length}`);
+    console.info(errors.length > 0 ? 'Errores detectados durante el proceso.' : 'No se detectaron errores durante el proceso.');
+    console.info('============================\n');
+
     await connection.end();
 
-    return results; // Devuelve los resultados del proceso de inserción.
+    return { results, summary: { saved, duplicates, errors } };
 };
 
 /**
@@ -78,7 +76,6 @@ const getAllEvents = async () => {
         return rows; // Devuelve los registros obtenidos.
     } catch (error) {
         // Manejo de errores durante la recuperación de datos.
-        console.error('Error al obtener eventos sociales:', error.message);
         throw error;
     } finally {
         // Asegura que la conexión se cierre, incluso si ocurre un error.

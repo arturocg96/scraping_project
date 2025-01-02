@@ -14,27 +14,19 @@ const scrapeNoticiasAndSave = async (req, res) => {
     const noticias = await scrapeService.scrapeNews();
 
     // Guarda las noticias en la base de datos y recibe los resultados del proceso.
-    const results = await noticiasModel.saveNews(noticias);
-
-    // Clasifica los resultados según su estado: éxito, duplicados y errores.
-    const saved = results.filter((result) => result.status === "success"); // Noticias guardadas correctamente.
-    const duplicates = results.filter((result) => result.status === "duplicate"); // Noticias duplicadas no guardadas.
-    const errors = results.filter((result) => result.status === "error"); // Noticias con errores en el guardado.
+    const { results, summary } = await noticiasModel.saveNews(noticias);
 
     // Responde con un resumen detallado de los resultados.
     res.json({
       message: "Scraping de noticias completado",
-      saved: saved.map((result) => result.article), // Noticias exitosamente almacenadas.
-      duplicates: duplicates.map((result) => result.article), // Noticias duplicadas detectadas.
-      errors: errors.map((result) => ({
-        article: result.article,
-        message: result.message, // Mensaje de error específico.
-      })),
+      total_processed: noticias.length,
+      saved: summary.saved.length,
+      duplicates: summary.duplicates.length,
+      errors: summary.errors,
     });
   } catch (error) {
     // Maneja errores generales durante el scraping o el almacenamiento.
-    console.error("Error en scrapeNoticiasAndSave:", error.message);
-    res.status(500).json({ error: "Error al procesar las noticias" }); // Respuesta con error al cliente.
+    res.status(500).json({ error: "Error al procesar las noticias" });
   }
 };
 
@@ -51,7 +43,6 @@ const getAllNoticias = async (req, res) => {
     res.json(noticias); // Responde con las noticias obtenidas.
   } catch (error) {
     // Maneja errores durante la obtención de noticias.
-    console.error("Error en getAllNoticias:", error.message);
     res.status(500).json({ error: "Error al obtener noticias" }); // Respuesta con error al cliente.
   }
 };

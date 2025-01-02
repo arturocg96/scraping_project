@@ -13,8 +13,6 @@ const getAllEvents = async (req, res) => {
         const events = await eventsModel.getAllEvents();
         res.json(events); // Responde con los eventos obtenidos.
     } catch (error) {
-        // Maneja errores durante la obtención de eventos.
-        console.error('Error en getAllEvents:', error.message);
         res.status(500).json({ error: 'Error al obtener los eventos' }); // Envía una respuesta con error al cliente.
     }
 };
@@ -28,31 +26,22 @@ const getAllEvents = async (req, res) => {
  */
 const scrapeEventsAndSave = async (req, res) => {
     try {
-        // Realiza el scraping de eventos desde una fuente externa.
+        // Realiza el scraping de eventos.
         const events = await scrapeService.scrapeEvents();
 
-        // Guarda los eventos en la base de datos a través del modelo y recibe los resultados del proceso.
-        const results = await eventsModel.saveEvents(events);
+        // Guarda los eventos en la base de datos y obtiene el resumen.
+        const { results, summary } = await eventsModel.saveEvents(events);
 
-        // Clasifica los resultados según su estado: éxito, duplicados y errores.
-        const saved = results.filter(result => result.status === 'success'); // Eventos guardados correctamente.
-        const duplicates = results.filter(result => result.status === 'duplicate'); // Eventos duplicados no guardados.
-        const errors = results.filter(result => result.status === 'error'); // Eventos con errores en el guardado.
-
-        // Responde con un resumen detallado de los resultados.
+        // Responde con un resumen del proceso.
         res.json({
-            message: 'Scraping y almacenamiento completados',
-            saved: saved.map(result => result.event), // Eventos exitosamente almacenados.
-            duplicates: duplicates.map(result => result.event), // Eventos duplicados detectados.
-            errors: errors.map(result => ({
-                event: result.event, 
-                message: result.message, // Mensaje de error específico.
-            })),
+            message: 'Scraping de eventos generales completado',
+            total_processed: events.length,
+            saved: summary.saved.length,
+            duplicates: summary.duplicates.length,
+            errors: summary.errors,
         });
     } catch (error) {
-        // Maneja errores generales durante el scraping o el almacenamiento.
-        console.error('Error en scrapeEventsAndSave:', error.message);
-        res.status(500).json({ error: 'Error al realizar scraping o guardar datos' }); // Respuesta con error al cliente.
+        res.status(500).json({ error: 'Error al realizar scraping o guardar eventos generales' });
     }
 };
 
