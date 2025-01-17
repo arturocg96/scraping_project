@@ -3,6 +3,7 @@ const eventsModel = require('../models/eventsModel'); // Modelo para la interacc
 const agendaModel = require('../models/agendaModel'); // Modelo para la interacción con la base de datos de eventos de agenda.
 const avisosModel = require('../models/avisosModel'); // Modelo para la interacción con la base de datos de avisos.
 const newsModel = require('../models/noticiasModel'); // Modelo para la interacción con la base de datos de noticias.
+const { categorizeAviso } = require('../utils/categorizeUtils'); // Utilidad para categorizar avisos.
 
 /**
  * Controlador para realizar el scraping de eventos generales, eventos de agenda, avisos y noticias,
@@ -31,6 +32,9 @@ const scrapeAllAndSave = async (req, res) => {
             } else {
                 aviso.content = null; // Si no hay enlace, no hay contenido.
             }
+
+            // Categoriza el aviso utilizando la función reutilizable.
+            aviso.category = categorizeAviso(aviso);
         }
         const avisosResults = await avisosModel.saveAvisos(avisos);
 
